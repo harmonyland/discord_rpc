@@ -3,7 +3,7 @@
 #### Example
 
 ```typescript
-import { createClient } from "https://deno.land/x/discord_rpc";
+import { createClient } from "https://deno.land/x/discord_rpc/mod.ts";
 
 const client = await createClient();
 await client.login("869104832227733514");
