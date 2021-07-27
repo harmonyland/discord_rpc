@@ -64,6 +64,15 @@ function getIPCPath(id: number) {
 }
 
 async function findIPC(id = 0): Promise<string> {
+  if (Deno.build.os === "windows") {
+    // Unix sockets aren't supported on Windows.
+    const PULL = "https://github.com/denoland/deno/pull/10377";
+    throw new DOMException(
+      "NotSupported",
+      `Windows is not supported. See ${PULL}`,
+    );
+  }
+
   const path = getIPCPath(id);
   try {
     await Deno.open(path).then((e) => e.close());
@@ -73,36 +82,19 @@ async function findIPC(id = 0): Promise<string> {
   }
 }
 
-export async function createClient(): Promise<RichPresence> {
+export async function createClient(): Promise<DiscordIPC> {
   const path = await findIPC();
-  const client = Object.create(RichPresence.prototype);
-
-  // NOTE(DjDeveloperr): Should we remove this condition since OS-specific logic is handled
-  // in the findIPCPath function? This would maybe just start working once unix sockets are
-  // enabled on Windows.
+  const client = Object.create(DiscordIPC.prototype);
 
   // Open a IPC connection
-  if (Deno.build.os !== "windows") {
-    // Unix
-    client[_ipcHandle] = await Deno.connect({
-      path,
-      transport: "unix",
-    });
-  } else {
-    // Unix sockets aren't supported on Windows.
-    const PULL = "https://github.com/denoland/deno/pull/10377";
-    throw new DOMException(
-      "NotSupported",
-      `Windows is not supported. See ${PULL}`,
-    );
-  }
+  client[_ipcHandle] = await Deno.connect({
+    path,
+    transport: "unix",
+  });
   return client;
 }
 
-// NOTE(DjDeveloperr): We should probably use a better name for this,
-// Discord IPC is much more than just a way to set Rich Presence.
-// And we can also probably use x/event for emitting events.
-export class RichPresence {
+export class DiscordIPC {
   [_ipcHandle]?: Deno.Conn;
 
   constructor() {
@@ -117,7 +109,7 @@ export class RichPresence {
   #header = new Uint8Array(8);
   #headerView = new DataView(this.#header.buffer);
 
-  // NOTE(DjDeveloperr): We should keep reading in a loop until it's closed since Discord IPC
+  // TODO(DjDeveloperr): We should keep reading in a loop until it's closed since Discord IPC
   // is capable of emitting events too.
   async #read<T = any>(): Promise<T | undefined> {
     if (await this[_ipcHandle]?.read(this.#header) !== 8) return;
