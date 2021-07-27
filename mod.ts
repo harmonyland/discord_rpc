@@ -56,14 +56,14 @@ function getIPCPath(id: number) {
   if (Deno.build.os === "windows") {
     prefix = `\\\\?\\pipe\\`;
   } else {
-    prefix = Deno.env.get("XDG_RUNTIME_DIR") ?? Deno.env.get("TMPDIR") ??
-      Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? "/tmp";
+    prefix = (Deno.env.get("XDG_RUNTIME_DIR") ?? Deno.env.get("TMPDIR") ??
+      Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? "/tmp") + "/";
   }
 
   return `${prefix}${suffix}`;
 }
 
-async function findIPC(id = 0): Promise<string> {
+async function findIPC(id = 0): Promise<Deno.Conn> {
   if (Deno.build.os === "windows") {
     // Unix sockets aren't supported on Windows.
     const PULL = "https://github.com/denoland/deno/pull/10377";
@@ -75,22 +75,20 @@ async function findIPC(id = 0): Promise<string> {
 
   const path = getIPCPath(id);
   try {
-    await Deno.open(path).then((e) => e.close());
-    return path;
+    return await Deno.connect({
+      path,
+      transport: "unix",
+    });
   } catch (e) {
     return findIPC(id + 1);
   }
 }
 
 export async function createClient(): Promise<DiscordIPC> {
-  const path = await findIPC();
+  const conn = await findIPC();
   const client = Object.create(DiscordIPC.prototype);
 
-  // Open a IPC connection
-  client[_ipcHandle] = await Deno.connect({
-    path,
-    transport: "unix",
-  });
+  client[_ipcHandle] = conn;
   return client;
 }
 
@@ -98,7 +96,7 @@ export class DiscordIPC {
   [_ipcHandle]?: Deno.Conn;
 
   constructor() {
-    throw new TypeError("Use `createClient` instead of `new RichPresence`");
+    throw new TypeError("Use `createClient` instead of `new DiscordIPC`");
   }
 
   async login(client_id: string) {
