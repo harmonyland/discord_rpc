@@ -98,6 +98,7 @@ export async function createClient(): Promise<RichPresence> {
 
 // NOTE(DjDeveloperr): We should probably use a better name for this,
 // Discord IPC is much more than just a way to set Rich Presence.
+// And we can also probably use x/event for emitting events.
 export class RichPresence {
   [_ipcHandle]?: Deno.Conn;
 
@@ -114,8 +115,8 @@ export class RichPresence {
   #header = new Uint8Array(8);
   #headerView = new DataView(this.#header.buffer);
 
-  // TODO(DjDeveloperr): Keep reading in a loop until it's closed since Discord IPC
-  // is capable of emitting events too, not just write then read.
+  // NOTE(DjDeveloperr): We should keep reading in a loop until it's closed since Discord IPC
+  // is capable of emitting events too.
   async #read() {
     if (await this[_ipcHandle]?.read(this.#header) !== 8) return;
     const op = this.#headerView.getInt32(0, true);
