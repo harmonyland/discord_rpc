@@ -107,8 +107,7 @@ export class RichPresence {
   }
 
   async login(client_id: string) {
-    const payload = JSON.stringify({ v: "1", client_id });
-    await this[_ipcHandle]?.write(encode(0, payload));
+    await this.send(OpCode.HANDSHAKE, { v: "1", client_id });
     await this.#read();
   }
 
@@ -117,7 +116,7 @@ export class RichPresence {
 
   // NOTE(DjDeveloperr): We should keep reading in a loop until it's closed since Discord IPC
   // is capable of emitting events too.
-  async #read() {
+  async #read<T = any>(): Promise<T | undefined> {
     if (await this[_ipcHandle]?.read(this.#header) !== 8) return;
     const op = this.#headerView.getInt32(0, true);
     const payloadLength = this.#headerView.getInt32(4, true);
