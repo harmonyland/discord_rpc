@@ -94,14 +94,19 @@ const _ipcHandle = Symbol("[[ipc]]");
 const _header = Symbol("[[header]]");
 const _headerView = Symbol("[[headerView]]");
 
-async function read<T = any>(ipc: DiscordIPC): Promise<T | undefined> {
+export interface Packet<T> {
+  op: OpCode;
+  data: T;
+}
+
+async function read<T = any>(ipc: DiscordIPC): Promise<Packet<T> | undefined> {
   if (await ipc[_ipcHandle]?.read(ipc[_header]) !== 8) return;
   const op = ipc[_headerView].getInt32(0, true);
   const payloadLength = ipc[_headerView].getInt32(4, true);
   const data = new Uint8Array(payloadLength);
   if (await ipc[_ipcHandle]?.read(data) !== payloadLength) return;
   const payload = new TextDecoder().decode(data);
-  return JSON.parse(payload);
+  return { op, data: JSON.parse(payload) };
 }
 
 export class DiscordIPC {
