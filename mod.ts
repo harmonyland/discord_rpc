@@ -1,6 +1,3 @@
-// NOTE(DjDeveloperr): We should probably split up into multiple files at this point
-// RPC protocol is quite huge.
-
 function encode(op: number, payloadString: string) {
   const payload = new TextEncoder().encode(payloadString);
   const data = new Uint8Array(4 + 4 + payload.byteLength);
