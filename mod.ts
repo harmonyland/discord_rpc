@@ -87,6 +87,9 @@ export async function createClient(): Promise<DiscordIPC> {
   const client = Object.create(DiscordIPC.prototype);
 
   client[_ipcHandle] = conn;
+  client[_header] = new Uint8Array(8);
+  client[_headerView] = new DataView(client[_header].buffer);
+
   return client;
 }
 
@@ -121,8 +124,8 @@ export class DiscordIPC {
     await read(this);
   }
 
-  [_header] = new Uint8Array(8);
-  [_headerView] = new DataView(this[_header].buffer);
+  [_header]!: Uint8Array;
+  [_headerView]!: DataView;
 
   async send(op: OpCode, payload: any) {
     const nonce = crypto.randomUUID();
