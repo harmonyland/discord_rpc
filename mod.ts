@@ -47,8 +47,6 @@ export enum OpCode {
   PONG,
 }
 
-const _ipcHandle = Symbol("[[ipc]]");
-
 function getIPCPath(id: number) {
   if (id < 0 || id > 9) throw new RangeError(`IPC ID must be between 0-9`);
 
@@ -92,6 +90,20 @@ export async function createClient(): Promise<DiscordIPC> {
   return client;
 }
 
+const _ipcHandle = Symbol("[[ipc]]");
+const _header = Symbol("[[header]]");
+const _headerView = Symbol("[[headerView]]");
+
+async function read<T = any>(ipc: DiscordIPC): Promise<T | undefined> {
+  if (await ipc[_ipcHandle]?.read(ipc[_header]) !== 8) return;
+  const op = ipc[_headerView].getInt32(0, true);
+  const payloadLength = ipc[_headerView].getInt32(4, true);
+  const data = new Uint8Array(payloadLength);
+  if (await ipc[_ipcHandle]?.read(data) !== payloadLength) return;
+  const payload = new TextDecoder().decode(data);
+  return JSON.parse(payload);
+}
+
 export class DiscordIPC {
   [_ipcHandle]?: Deno.Conn;
 
@@ -101,23 +113,11 @@ export class DiscordIPC {
 
   async login(client_id: string) {
     await this.send(OpCode.HANDSHAKE, { v: "1", client_id });
-    await this.#read();
+    await read(this);
   }
 
-  #header = new Uint8Array(8);
-  #headerView = new DataView(this.#header.buffer);
-
-  // TODO(DjDeveloperr): We should keep reading in a loop until it's closed since Discord IPC
-  // is capable of emitting events too.
-  async #read<T = any>(): Promise<T | undefined> {
-    if (await this[_ipcHandle]?.read(this.#header) !== 8) return;
-    const op = this.#headerView.getInt32(0, true);
-    const payloadLength = this.#headerView.getInt32(4, true);
-    const data = new Uint8Array(payloadLength);
-    if (await this[_ipcHandle]?.read(data) !== payloadLength) return;
-    const payload = new TextDecoder().decode(data);
-    return JSON.parse(payload);
-  }
+  [_header] = new Uint8Array(8);
+  [_headerView] = new DataView(this[_header].buffer);
 
   async send(op: OpCode, payload: any) {
     const nonce = crypto.randomUUID();
@@ -135,7 +135,7 @@ export class DiscordIPC {
         activity,
       },
     });
-    await this.#read();
+    await read(this);
   }
 
   async close() {
