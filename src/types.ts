@@ -206,6 +206,18 @@ export interface VoiceSettingsMode {
   delay: number;
 }
 
+export interface UserVoiceSettingsPan {
+  left: number;
+  right: number;
+}
+
+export interface UserVoiceSettings {
+  user_id: string;
+  pan?: UserVoiceSettingsPan;
+  volume?: number;
+  mute?: boolean;
+}
+
 export enum KeyType {
   KEYBOARD_KEY,
   MOUSE_BUTTON,

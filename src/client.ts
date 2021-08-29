@@ -1,14 +1,19 @@
 import { DiscordIPC, PacketIPCEvent } from "./conn.ts";
-import {
+import type {
   Activity,
   ApplicationPayload,
   AuthenticateResponsePayload,
   ChannelPayload,
   ClientConfig,
   Command,
+  GetImageOptions,
   PartialChannel,
+  PartialGuild,
+  RelationshipPayload,
   RPCEvent,
   UserPayload,
+  UserVoiceSettings,
+  VoiceSettings,
 } from "./types.ts";
 
 export interface ClientOptions {
@@ -187,6 +192,97 @@ export class Client {
         channel_id: channelID,
       },
     );
+  }
+
+  getGuilds() {
+    return this.ipc!.sendCommand<{ guilds: PartialGuild[] }>(
+      "GET_GUILDS",
+      {},
+    ).then((e) => e.guilds);
+  }
+
+  getGuild(guildID?: string) {
+    return this.ipc!.sendCommand<PartialGuild>(
+      "GET_GUILD",
+      {
+        guild_id: guildID,
+      },
+    );
+  }
+
+  getVoiceSettings() {
+    return this.ipc!.sendCommand<VoiceSettings>("GET_VOICE_SETTINGS", {});
+  }
+
+  setVoiceSettings(settings: Partial<VoiceSettings>) {
+    return this.ipc!.sendCommand<VoiceSettings>(
+      "SET_VOICE_SETTINGS",
+      settings,
+    );
+  }
+
+  setUserVoiceSettings(settings: Partial<UserVoiceSettings>) {
+    return this.ipc!.sendCommand<UserVoiceSettings>(
+      "SET_USER_VOICE_SETTINGS",
+      settings,
+    );
+  }
+
+  getSelectedVoiceChannel() {
+    return this.ipc!.sendCommand<ChannelPayload>(
+      "GET_SELECTED_VOICE_CHANNEL",
+      {},
+    );
+  }
+
+  selectVoiceChannel(channelID: string, force = false, timeout = 1) {
+    return this.ipc!.sendCommand<ChannelPayload>("SELECT_VOICE_CHANNEL", {
+      channel_id: channelID,
+      force,
+      timeout,
+    });
+  }
+
+  selectTextChannel(channelID: string, timeout = 1) {
+    return this.ipc!.sendCommand<ChannelPayload>("SELECT_TEXT_CHANNEL", {
+      channel_id: channelID,
+      timeout,
+    });
+  }
+
+  async sendActivityJoinInvite(userID: string) {
+    await this.ipc!.sendCommand("SEND_ACTIVITY_JOIN_INVITE", {
+      user_id: userID,
+    });
+  }
+
+  // TODO: Make sure it works
+  async closeActivityJoinRequest(userID: string) {
+    await this.ipc!.sendCommand("CLOSE_ACTIVITY_JOIN_REQUEST", {
+      user_id: userID,
+    });
+  }
+
+  async closeActivityRequest(userID: string) {
+    await this.ipc!.sendCommand("CLOSE_ACTIVITY_REQUEST", {
+      user_id: userID,
+    });
+  }
+
+  getRelationships() {
+    return this.ipc!.sendCommand<{ relationships: RelationshipPayload[] }>(
+      "GET_RELATIONSHIPS",
+      {},
+    ).then((e) => e.relationships);
+  }
+
+  async getImage(options: GetImageOptions) {
+    const base64 = await this.ipc!.sendCommand<string>(
+      "GET_IMAGE",
+      options as unknown as Record<string, unknown>,
+    );
+    // TODO: Decode to Uint8Array?
+    return base64;
   }
 
   #emit(event: ClientEvent) {
