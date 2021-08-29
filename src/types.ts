@@ -284,71 +284,71 @@ export interface Attachment {
 }
 
 export interface EmbedPayload {
-  title?: string
-  type?: EmbedTypes
-  description?: string
-  url?: string
-  timestamp?: string
-  color?: number
-  footer?: EmbedFooter
-  image?: EmbedImage
-  thumbnail?: EmbedThumbnail
-  video?: EmbedVideo
-  provider?: EmbedProvider
-  author?: EmbedAuthor
-  fields?: EmbedField[]
+  title?: string;
+  type?: EmbedTypes;
+  description?: string;
+  url?: string;
+  timestamp?: string;
+  color?: number;
+  footer?: EmbedFooter;
+  image?: EmbedImage;
+  thumbnail?: EmbedThumbnail;
+  video?: EmbedVideo;
+  provider?: EmbedProvider;
+  author?: EmbedAuthor;
+  fields?: EmbedField[];
 }
 
 export type EmbedTypes =
-  | 'rich'
-  | 'image'
-  | 'video'
-  | 'gifv'
-  | 'article'
-  | 'link'
+  | "rich"
+  | "image"
+  | "video"
+  | "gifv"
+  | "article"
+  | "link";
 
 export interface EmbedField {
-  name: string
-  value: string
-  inline?: boolean
+  name: string;
+  value: string;
+  inline?: boolean;
 }
 
 export interface EmbedAuthor {
-  name?: string
-  url?: string
-  icon_url?: string
-  proxy_icon_url?: string
+  name?: string;
+  url?: string;
+  icon_url?: string;
+  proxy_icon_url?: string;
 }
 
 export interface EmbedFooter {
-  text: string
-  icon_url?: string
-  proxy_icon_url?: string
+  text: string;
+  icon_url?: string;
+  proxy_icon_url?: string;
 }
 
 export interface EmbedImage {
-  url?: string
-  proxy_url?: string
-  height?: number
-  width?: number
+  url?: string;
+  proxy_url?: string;
+  height?: number;
+  width?: number;
 }
 
 export interface EmbedProvider {
-  name?: string
-  url?: string
+  name?: string;
+  url?: string;
 }
 
 export interface EmbedVideo {
-  url?: string
-  height?: number
-  width?: number
+  url?: string;
+  height?: number;
+  width?: number;
 }
 
 export interface EmbedThumbnail {
-  url?: string
-  proxy_url?: string
-  height?: number
-  width?: number
+  url?: string;
+  proxy_url?: string;
+  height?: number;
+  width?: number;
 }
 
 export enum MessageType {
@@ -373,7 +373,7 @@ export enum MessageType {
   REPLY = 19,
   APPLICATION_COMMAND = 20,
   THREAD_STARTER_MESSAGE = 21,
-  GUILD_INVITE_REMINDER = 22
+  GUILD_INVITE_REMINDER = 22,
 }
 
 export interface Message {
