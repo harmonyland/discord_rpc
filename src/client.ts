@@ -161,24 +161,14 @@ export class Client {
     event: keyof typeof RPCEvent,
     args?: T,
   ) {
-    await this.ipc!.sendCommand("SUBSCRIBE", {
-      args: {
-        event: event,
-        ...args,
-      },
-    });
+    await this.ipc!.sendCommand("SUBSCRIBE", args ?? {}, event);
   }
 
   async unsubscribe<T extends Record<string, unknown>>(
     event: keyof typeof RPCEvent,
     args?: T,
   ) {
-    await this.ipc!.sendCommand("UNSUBSCRIBE", {
-      args: {
-        event: event,
-        ...args,
-      },
-    });
+    await this.ipc!.sendCommand("UNSUBSCRIBE", args ?? {}, event);
   }
 
   getChannels(guildID?: string) {

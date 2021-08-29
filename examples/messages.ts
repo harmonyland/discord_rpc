@@ -8,9 +8,7 @@ const client = new Client({
 
 (async () => {
   for await (const event of client) {
-    if (event.type === "packet") console.log("Packet", event.data);
-    else if (event.type === "dispatch") {
-      console.log("dispatch"); // for debugging
+    if (event.type === "dispatch") {
       if (event.event === "MESSAGE_CREATE") {
         const { message: msg, channel_id: channel } = event.data as {
           message: Message;

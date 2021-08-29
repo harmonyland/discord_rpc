@@ -1,4 +1,4 @@
-import { Command, OpCode, ReadyEventPayload } from "./types.ts";
+import { Command, OpCode, ReadyEventPayload, RPCEvent } from "./types.ts";
 import { encode, findIPC } from "./util.ts";
 
 const _ipcHandle = Symbol("[[ipc]]");
@@ -113,6 +113,7 @@ export class DiscordIPC {
   >(
     cmd: Command | keyof typeof Command,
     args: T2,
+    evt?: keyof typeof RPCEvent,
   ): Promise<T> {
     return new Promise((resolve, reject) => {
       const nonce = crypto.randomUUID();
@@ -121,6 +122,7 @@ export class DiscordIPC {
         cmd: typeof cmd === "number" ? Command[cmd] : cmd,
         args,
         nonce,
+        evt,
       });
     });
   }
@@ -178,7 +180,7 @@ export class DiscordIPC {
     const payload = JSON.parse(new TextDecoder().decode(data));
     const handle = this[_commandQueue].get(payload.nonce);
     if (handle) {
-      if (payload.cmd === "DISPATCH" && payload.evt === "ERROR") {
+      if (payload.evt === "ERROR") {
         handle.reject(payload.data);
       } else {
         handle.resolve(payload.data);
