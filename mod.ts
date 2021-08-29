@@ -1,3 +1,5 @@
+// deno-lint-ignore-file camelcase
+
 function encode(op: number, payloadString: string) {
   const payload = new TextEncoder().encode(payloadString);
   const data = new Uint8Array(4 + 4 + payload.byteLength);
@@ -47,7 +49,8 @@ export enum OpCode {
 function getIPCPath(id: number) {
   if (id < 0 || id > 9) throw new RangeError(`IPC ID must be between 0-9`);
 
-  let prefix, suffix = `discord-ipc-${id}`;
+  let prefix;
+  const suffix = `discord-ipc-${id}`;
   if (Deno.build.os === "windows") {
     prefix = `\\\\?\\pipe\\`;
   } else {
@@ -74,7 +77,7 @@ async function findIPC(id = 0): Promise<Deno.Conn> {
       path,
       transport: "unix",
     });
-  } catch (e) {
+  } catch (_) {
     return findIPC(id + 1);
   }
 }
@@ -99,6 +102,7 @@ export interface Packet<T> {
   data: T;
 }
 
+// deno-lint-ignore no-explicit-any
 async function read<T = any>(ipc: DiscordIPC): Promise<Packet<T> | undefined> {
   if (await ipc[_ipcHandle]?.read(ipc[_header]) !== 8) return;
   const op = ipc[_headerView].getInt32(0, true);
@@ -124,6 +128,7 @@ export class DiscordIPC {
   [_header]!: Uint8Array;
   [_headerView]!: DataView;
 
+  // deno-lint-ignore no-explicit-any
   async send(op: OpCode, payload: any) {
     const nonce = crypto.randomUUID();
     if (typeof payload === "object" && payload !== null) payload.nonce = nonce;
