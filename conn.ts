@@ -31,8 +31,7 @@ export async function createClient(): Promise<DiscordIPC> {
   return client;
 }
 
-// deno-lint-ignore no-explicit-any
-export interface PacketIPCEvent<T = any> {
+export interface PacketIPCEvent<T = Record<string, unknown>> {
   type: "packet";
   op: OpCode;
   data: T;
@@ -54,6 +53,11 @@ export class DiscordIPC {
     throw new TypeError("Use `createClient` instead of `new DiscordIPC`");
   }
 
+  /**
+   * Performs initial handshake.
+   *
+   * @param clientID Application ID from Developer Portal
+   */
   async login(clientID: string) {
     await this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
   }
@@ -61,24 +65,37 @@ export class DiscordIPC {
   [_header]!: Uint8Array;
   [_headerView]!: DataView;
 
-  // deno-lint-ignore no-explicit-any
-  async send(op: OpCode, payload: any) {
-    let nonce: string;
-    if (
-      typeof payload === "object" &&
-      payload !== null &&
-      typeof payload.nonce === "undefined"
-    ) {
-      nonce = crypto.randomUUID();
-      payload.nonce = nonce;
-    } else {
-      nonce = payload.nonce;
+  /**
+   * Send a packet to Discord IPC. Returns nonce.
+   *
+   * Nonce is generated if the payload does not have a `nonce` property
+   * and is added to payload object too.
+   *
+   * If payload object does contain a nonce, then it is returned instead.
+   */
+  async send<T extends Record<string, unknown>>(op: OpCode, payload: T) {
+    if (typeof payload !== "object" || payload === null) {
+      throw new TypeError("Payload must be an object");
     }
+
+    let nonce: string;
+    if (typeof payload.nonce === "undefined") {
+      nonce = crypto.randomUUID();
+      Object.defineProperty(payload, "nonce", {
+        value: nonce,
+      });
+    } else {
+      nonce = payload.nonce as string;
+    }
+
     const data = encode(op, JSON.stringify(payload));
     await this[_ipcHandle].write(data);
     return nonce;
   }
 
+  /**
+   * Set Presence Activity
+   */
   async setActivity(activity: Activity) {
     await this.send(OpCode.FRAME, {
       cmd: "SET_ACTIVITY",
@@ -89,9 +106,14 @@ export class DiscordIPC {
     });
   }
 
+  /**
+   * Closes the connection to Discord IPC Socket
+   * and any open ReadableStreams for events.
+   */
   close() {
     for (const ctx of this[_writers]) {
       ctx.close();
+      this[_writers].delete(ctx);
     }
     this[_breakEventLoop] = true;
     this[_ipcHandle].close();
