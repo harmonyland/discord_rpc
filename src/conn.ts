@@ -171,7 +171,7 @@ export class DiscordIPC {
     if (handle) {
       if (payload.evt === "ERROR") {
         handle.reject(
-          new Error(`Error(${payload.data.code}): ${payload.data.message}`),
+          new Error(`(${payload.data.code}) ${payload.data.message}`),
         );
       } else {
         handle.resolve(payload.data);
