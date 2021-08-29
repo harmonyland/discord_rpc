@@ -1,3 +1,3 @@
-export * from "./conn.ts";
-export * from "./types.ts";
-export * from "./util.ts";
+export * from "./src/conn.ts";
+export * from "./src/types.ts";
+export * from "./src/util.ts";
