@@ -11,7 +11,9 @@ export function encode(op: number, payloadString: string) {
 export function getIPCPath(id: number) {
   if (id < 0 || id > 9) throw new RangeError(`IPC ID must be between 0-9`);
 
-  let prefix, suffix = `discord-ipc-${id}`;
+  const suffix = `discord-ipc-${id}`;
+  let prefix;
+
   if (Deno.build.os === "windows") {
     prefix = `\\\\?\\pipe\\`;
   } else {
@@ -38,7 +40,7 @@ export async function findIPC(id = 0): Promise<Deno.Conn> {
       path,
       transport: "unix",
     });
-  } catch (e) {
+  } catch (_) {
     return findIPC(id + 1);
   }
 }

@@ -1,3 +1,5 @@
+// deno-lint-ignore-file camelcase
+
 export interface Activity {
   details?: string;
   state?: string;

@@ -1,5 +1,5 @@
 import { Activity, OpCode } from "./types.ts";
-import { findIPC, encode } from "./util.ts";
+import { encode, findIPC } from "./util.ts";
 
 const _ipcHandle = Symbol("[[ipc]]");
 const _header = Symbol("[[header]]");
@@ -24,12 +24,14 @@ export async function createClient(): Promise<DiscordIPC> {
         if (client[_breakEventLoop] === true) break;
         await client[_read]();
       }
-    } catch(e) {}
+      // deno-lint-ignore no-empty
+    } catch (_) {}
   })();
 
   return client;
 }
 
+// deno-lint-ignore no-explicit-any
 export interface PacketIPCEvent<T = any> {
   type: "packet";
   op: OpCode;
@@ -59,12 +61,13 @@ export class DiscordIPC {
   [_header]!: Uint8Array;
   [_headerView]!: DataView;
 
+  // deno-lint-ignore no-explicit-any
   async send(op: OpCode, payload: any) {
     let nonce: string;
     if (
-      typeof payload === "object" 
-      && payload !== null 
-      && typeof payload.nonce === "undefined"
+      typeof payload === "object" &&
+      payload !== null &&
+      typeof payload.nonce === "undefined"
     ) {
       nonce = crypto.randomUUID();
       payload.nonce = nonce;
@@ -86,12 +89,12 @@ export class DiscordIPC {
     });
   }
 
-  async close() {
+  close() {
     for (const ctx of this[_writers]) {
       ctx.close();
     }
     this[_breakEventLoop] = true;
-    await this[_ipcHandle].close();
+    this[_ipcHandle].close();
     this[_emit]({ type: "close" });
   }
 
@@ -103,8 +106,10 @@ export class DiscordIPC {
 
   async [_read]() {
     let headerRead = 0;
-    while(headerRead < 8) {
-      const read = await this[_ipcHandle].read(this[_header].subarray(headerRead));
+    while (headerRead < 8) {
+      const read = await this[_ipcHandle].read(
+        this[_header].subarray(headerRead),
+      );
       if (read === null) throw new Error("Connection closed");
       headerRead += read;
     }
