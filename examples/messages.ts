@@ -1,4 +1,4 @@
-import { Client } from "../mod.ts";
+import { Client, Message } from "../mod.ts";
 
 const client = new Client({
   id: Deno.env.get("CLIENT_ID")!,
@@ -10,7 +10,17 @@ const client = new Client({
   for await (const event of client) {
     if (event.type === "dispatch") {
       if (event.event === "MESSAGE_CREATE") {
-        console.log(event.event, event.data);
+        const { message: msg, channel_id: channel } = event.data as {
+          message: Message;
+          channel_id: string;
+        };
+        console.log(
+          "MESSAGE_CREATE in",
+          channel,
+          "by",
+          msg.author.username + "#" + msg.author.discriminator + ":",
+          msg.content,
+        );
       }
     }
   }
@@ -25,9 +35,8 @@ const channels = await client.getChannels();
 console.log("Got", channels.length, "channels!");
 
 for (const channel of channels) {
-  const chan = await client.getChannel(channel.id);
-  console.log(chan);
-  // await client.subscribe("MESSAGE_CREATE", {
-  //   channel_id: channel.id,
-  // });
+  // const chan = await client.getChannel(channel.id);
+  await client.subscribe("MESSAGE_CREATE", {
+    channel_id: channel.id,
+  });
 }
