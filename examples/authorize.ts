@@ -1,3 +1,5 @@
+// NOTE: For auth to work, you must have set at least one redirect URI in dev portal.
+
 import { Client } from "../mod.ts";
 
 const client = new Client({

@@ -1,4 +1,4 @@
-import { ChannelType, Client, Message } from "../mod.ts";
+import { Client, Message } from "../mod.ts";
 
 const client = new Client({
   id: Deno.env.get("CLIENT_ID")!,
@@ -31,17 +31,6 @@ console.log("Connected!");
 
 await client.authorize();
 
-const channels = await client.getChannels();
-console.log("Got", channels.length, "channels!");
-
-for (const channel of channels) {
-  // const chan = await client.getChannel(channel.id);
-  if (
-    channel.type === ChannelType.DM || channel.type === ChannelType.GROUP_DM ||
-    channel.type === ChannelType.GUILD_TEXT
-  ) {
-    await client.subscribe("MESSAGE_CREATE", {
-      channel_id: channel.id,
-    }).catch(() => {});
-  }
-}
+await client.subscribe("MESSAGE_CREATE", {
+  channel_id: Deno.env.get("CHANNEL"),
+});

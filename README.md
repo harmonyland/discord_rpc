@@ -3,12 +3,18 @@
 #### Example
 
 ```typescript
-import { createClient } from "https://deno.land/x/discord_rpc/mod.ts";
+import { Client } from "https://deno.land/x/discord_rpc/mod.ts";
 
-const client = await createClient();
-await client.login("869104832227733514");
-await client.setActivity({ details: "Deno 🦕", state: "Testing..." });
-await client.close();
+const client = new Client({
+  id: "869104832227733514",
+});
+
+await client.connect();
+
+await client.setActivity({
+  details: "Deno 🦕",
+  state: "Testing...",
+});
 ```
 
 [Support me](https://patreon.com/littledivy) on Patreon.

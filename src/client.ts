@@ -1,4 +1,4 @@
-import { createClient, DiscordIPC, PacketIPCEvent } from "./conn.ts";
+import { DiscordIPC, PacketIPCEvent } from "./conn.ts";
 import {
   Activity,
   ApplicationPayload,
@@ -71,7 +71,7 @@ export class Client {
   constructor(public options: ClientOptions) {}
 
   async connect() {
-    this.ipc = await createClient();
+    this.ipc = await DiscordIPC.connect();
     this.#startEventLoop();
     await this.ipc.login(this.options.id);
     return this;
