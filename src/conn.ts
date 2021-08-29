@@ -180,7 +180,7 @@ export class DiscordIPC {
       this.#readyHandle = undefined;
     } else if (op === OpCode.CLOSE && payload.code === 4000) {
       this.#readyHandle?.reject(
-        new Error(`Connection closed (${payload.code}): ${payload.message}`),
+        `Connection closed (${payload.code}): ${payload.message}`,
       );
       this.#readyHandle = undefined;
     }
