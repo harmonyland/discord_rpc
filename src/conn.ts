@@ -170,7 +170,9 @@ export class DiscordIPC {
     const handle = this.#commandQueue.get(payload.nonce);
     if (handle) {
       if (payload.evt === "ERROR") {
-        handle.reject(payload.data);
+        handle.reject(
+          new Error(`Error(${payload.data.code}): ${payload.data.message}`),
+        );
       } else {
         handle.resolve(payload.data);
       }
@@ -180,7 +182,7 @@ export class DiscordIPC {
       this.#readyHandle = undefined;
     } else if (op === OpCode.CLOSE && payload.code === 4000) {
       this.#readyHandle?.reject(
-        `Connection closed (${payload.code}): ${payload.message}`,
+        new Error(`Connection closed (${payload.code}): ${payload.message}`),
       );
       this.#readyHandle = undefined;
     }
