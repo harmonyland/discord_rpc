@@ -42,6 +42,6 @@ for (const channel of channels) {
   ) {
     await client.subscribe("MESSAGE_CREATE", {
       channel_id: channel.id,
-    });
+    }).catch(() => {});
   }
 }
