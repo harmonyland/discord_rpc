@@ -1,4 +1,3 @@
-// deno-lint-ignore-file
 // deno-lint-ignore-file camelcase
 
 export interface Activity {
@@ -187,6 +186,7 @@ export interface UserPayloadVoiceSettings {
 export interface VoiceSettingsInput {
   device_id: string;
   volume: number;
+  // deno-lint-ignore no-explicit-any
   available_devices: any[];
 }
 
