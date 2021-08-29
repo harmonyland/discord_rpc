@@ -24,7 +24,7 @@ export class DiscordIPC {
   #_eventLoop!: Promise<void>;
   #breakEventLoop?: boolean;
   #header = new Uint8Array(8);
-  #headerView: DataView = new DataView(this.#header);
+  #headerView: DataView = new DataView(this.#header.buffer);
   #commandQueue = new Map<
     string,
     PromiseController
