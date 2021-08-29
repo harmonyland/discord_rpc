@@ -1,4 +1,4 @@
-import { Activity, OpCode } from "./types.ts";
+import { Command, OpCode, ReadyEventPayload } from "./types.ts";
 import { encode, findIPC } from "./util.ts";
 
 const _ipcHandle = Symbol("[[ipc]]");
@@ -9,6 +9,8 @@ const _emit = Symbol("[[emit]]");
 const _eventLoop = Symbol("[[eventLoop]]");
 const _read = Symbol("[[read]]");
 const _breakEventLoop = Symbol("[[breakEventLoop]]");
+const _commandQueue = Symbol("[[commandQueue]]");
+const _readyHandle = Symbol("[[readyHandle]]");
 
 export async function createClient(): Promise<DiscordIPC> {
   const conn = await findIPC();
@@ -18,6 +20,8 @@ export async function createClient(): Promise<DiscordIPC> {
   client[_header] = new Uint8Array(8);
   client[_headerView] = new DataView(client[_header].buffer);
   client[_writers] = new Set();
+  client[_commandQueue] = new Map();
+
   client[_eventLoop] = (async () => {
     try {
       while (true) {
@@ -43,27 +47,27 @@ export interface CloseIPCEvent {
 
 export type IPCEvent = PacketIPCEvent | CloseIPCEvent;
 
+interface PromiseController {
+  resolve: CallableFunction;
+  reject: CallableFunction;
+}
+
 export class DiscordIPC {
   [_ipcHandle]!: Deno.Conn;
   [_writers]!: Set<ReadableStreamDefaultController<IPCEvent>>;
   [_eventLoop]!: Promise<void>;
   [_breakEventLoop]?: boolean;
+  [_header]!: Uint8Array;
+  [_headerView]!: DataView;
+  [_commandQueue]!: Map<
+    string,
+    PromiseController
+  >;
+  [_readyHandle]?: PromiseController;
 
   constructor() {
     throw new TypeError("Use `createClient` instead of `new DiscordIPC`");
   }
-
-  /**
-   * Performs initial handshake.
-   *
-   * @param clientID Application ID from Developer Portal
-   */
-  async login(clientID: string) {
-    await this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
-  }
-
-  [_header]!: Uint8Array;
-  [_headerView]!: DataView;
 
   /**
    * Send a packet to Discord IPC. Returns nonce.
@@ -94,15 +98,42 @@ export class DiscordIPC {
   }
 
   /**
-   * Set Presence Activity
+   * Sends a Managed Command to Discord IPC.
+   *
+   * Managed means it resolves when Discord sends back some response,
+   * or rejects when an ERROR event is DISPATCHed instead.
+   *
+   * @param cmd Command name
+   * @param args Arguments object
+   * @returns Command response
    */
-  async setActivity(activity: Activity) {
-    await this.send(OpCode.FRAME, {
-      cmd: "SET_ACTIVITY",
-      args: {
-        pid: Deno.pid,
-        activity,
-      },
+  sendCommand<
+    T = unknown,
+    T2 extends Record<string, unknown> = Record<string, unknown>,
+  >(
+    cmd: Command | keyof typeof Command,
+    args: T2,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const nonce = crypto.randomUUID();
+      this[_commandQueue].set(nonce, { resolve, reject });
+      this.send(OpCode.FRAME, {
+        cmd: typeof cmd === "number" ? Command[cmd] : cmd,
+        args,
+        nonce,
+      });
+    });
+  }
+
+  /**
+   * Performs initial handshake.
+   *
+   * @param clientID Application ID from Developer Portal
+   */
+  login(clientID: string) {
+    return new Promise<ReadyEventPayload>((resolve, reject) => {
+      this[_readyHandle] = { resolve, reject };
+      this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
     });
   }
 
@@ -144,8 +175,22 @@ export class DiscordIPC {
       if (read === null) throw new Error("Connection closed");
       bodyRead += read;
     }
-    const payload = new TextDecoder().decode(data);
-    this[_emit]({ type: "packet", op, data: JSON.parse(payload) });
+    const payload = JSON.parse(new TextDecoder().decode(data));
+    const handle = this[_commandQueue].get(payload.nonce);
+    if (handle) {
+      if (payload.cmd === "DISPATCH" && payload.evt === "ERROR") {
+        handle.reject(payload.data);
+      } else {
+        handle.resolve(payload.data);
+      }
+    } else if (payload.cmd === "DISPATCH" && payload.evt === "READY") {
+      this[_readyHandle]?.resolve(payload.data);
+    } else if (op === OpCode.CLOSE && payload.code === 4000) {
+      this[_readyHandle]?.reject(
+        new Error(`Connection closed (${payload.code}): ${payload.message}`),
+      );
+    }
+    this[_emit]({ type: "packet", op, data: payload });
   }
 
   [Symbol.asyncIterator](): AsyncIterableIterator<IPCEvent> {
