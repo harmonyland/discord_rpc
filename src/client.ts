@@ -1,4 +1,4 @@
-import { createClient, DiscordIPC } from "./conn.ts";
+import { createClient, DiscordIPC, PacketIPCEvent } from "./conn.ts";
 import {
   Activity,
   ApplicationPayload,
@@ -48,7 +48,8 @@ export type ClientEvent =
   | ReadyEvent
   | AuthorizeEvent
   | AuthenticateEvent
-  | DispatchEvent;
+  | DispatchEvent
+  | PacketIPCEvent;
 
 export class Client {
   ipc?: DiscordIPC;
@@ -238,7 +239,14 @@ export class Client {
 
         if (event.type === "close") {
           this.#closeWriters();
+          break;
         } else if (event.type === "packet") {
+          this.#emit({
+            type: "packet",
+            op: event.op,
+            data: event.data,
+          });
+
           const { cmd, data, evt } = event.data as {
             cmd: keyof typeof Command;
             // deno-lint-ignore no-explicit-any
