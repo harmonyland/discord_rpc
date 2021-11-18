@@ -17,7 +17,7 @@ export function getIPCPath(id: number) {
   let prefix;
 
   if (Deno.build.os === "windows") {
-    prefix = `\\\\?\\pipe\\`;
+    prefix = `\\\\.\\pipe\\`;
   } else {
     prefix = (Deno.env.get("XDG_RUNTIME_DIR") ?? Deno.env.get("TMPDIR") ??
       Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? "/tmp") + "/";
