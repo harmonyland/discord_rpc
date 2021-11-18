@@ -9,6 +9,7 @@ const client = new Client({
 });
 
 await client.connect();
+console.log(`Connected! User: ${client.userTag}`);
 
 const { access_token: token } = await client.authorize();
 console.log("Authorized! Token:", token);

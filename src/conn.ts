@@ -78,7 +78,7 @@ export class DiscordIPC {
     }
 
     const data = encode(op, JSON.stringify(payload));
-    await this.#ipcHandle.write(data);
+    const written = await this.#ipcHandle.write(data);
     return nonce;
   }
 
@@ -118,9 +118,9 @@ export class DiscordIPC {
    * @param clientID Application ID from Developer Portal
    */
   login(clientID: string) {
-    return new Promise<ReadyEventPayload>((resolve, reject) => {
+    return new Promise<ReadyEventPayload>(async (resolve, reject) => {
       this.#readyHandle = { resolve, reject };
-      this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
+      await this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
     });
   }
 
@@ -157,8 +157,10 @@ export class DiscordIPC {
       if (read === null) throw new Error("Connection closed");
       headerRead += read;
     }
+
     const op = this.#headerView.getInt32(0, true) as OpCode;
     const payloadLength = this.#headerView.getInt32(4, true);
+
     const data = new Uint8Array(payloadLength);
     let bodyRead = 0;
     while (bodyRead < payloadLength) {
@@ -166,7 +168,10 @@ export class DiscordIPC {
       if (read === null) throw new Error("Connection closed");
       bodyRead += read;
     }
-    const payload = JSON.parse(new TextDecoder().decode(data));
+
+    const text = new TextDecoder().decode(data);
+    const payload = JSON.parse(text);
+
     const handle = this.#commandQueue.get(payload.nonce);
     if (handle) {
       if (payload.evt === "ERROR") {
@@ -186,6 +191,7 @@ export class DiscordIPC {
       );
       this.#readyHandle = undefined;
     }
+
     this.#emit({ type: "packet", op, data: payload });
   }
 

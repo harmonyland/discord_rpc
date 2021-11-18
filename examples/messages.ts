@@ -27,7 +27,7 @@ const client = new Client({
 })();
 
 await client.connect();
-console.log("Connected!");
+console.log(`Connected! User: ${client.userTag}`);
 
 await client.authorize();
 

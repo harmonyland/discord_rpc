@@ -1,3 +1,5 @@
+import { connect } from "../deps.ts";
+
 export function encode(op: number, payloadString: string) {
   const payload = new TextEncoder().encode(payloadString);
   const data = new Uint8Array(4 + 4 + payload.byteLength);
@@ -25,21 +27,16 @@ export function getIPCPath(id: number) {
 }
 
 export async function findIPC(id = 0): Promise<Deno.Conn> {
-  if (Deno.build.os === "windows") {
-    // Unix sockets aren't supported on Windows.
-    const PULL = "https://github.com/denoland/deno/pull/10377";
-    throw new DOMException(
-      "NotSupported",
-      `Windows is not supported. See ${PULL}`,
-    );
-  }
-
   const path = getIPCPath(id);
   try {
-    return await Deno.connect({
-      path,
-      transport: "unix",
-    });
+    if (Deno.build.os === "windows") {
+      return await connect(path);
+    } else {
+      return await Deno.connect({
+        path,
+        transport: "unix",
+      });
+    }
   } catch (_) {
     return findIPC(id + 1);
   }
