@@ -78,7 +78,7 @@ export class DiscordIPC {
     }
 
     const data = encode(op, JSON.stringify(payload));
-    const written = await this.#ipcHandle.write(data);
+    await this.#ipcHandle.write(data);
     return nonce;
   }
 
@@ -118,9 +118,9 @@ export class DiscordIPC {
    * @param clientID Application ID from Developer Portal
    */
   login(clientID: string) {
-    return new Promise<ReadyEventPayload>(async (resolve, reject) => {
+    return new Promise<ReadyEventPayload>((resolve, reject) => {
       this.#readyHandle = { resolve, reject };
-      await this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
+      this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
     });
   }
 
@@ -169,8 +169,7 @@ export class DiscordIPC {
       bodyRead += read;
     }
 
-    const text = new TextDecoder().decode(data);
-    const payload = JSON.parse(text);
+    const payload = JSON.parse(new TextDecoder().decode(data));
 
     const handle = this.#commandQueue.get(payload.nonce);
     if (handle) {
