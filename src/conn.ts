@@ -157,8 +157,10 @@ export class DiscordIPC {
       if (read === null) throw new Error("Connection closed");
       headerRead += read;
     }
+
     const op = this.#headerView.getInt32(0, true) as OpCode;
     const payloadLength = this.#headerView.getInt32(4, true);
+
     const data = new Uint8Array(payloadLength);
     let bodyRead = 0;
     while (bodyRead < payloadLength) {
@@ -166,7 +168,9 @@ export class DiscordIPC {
       if (read === null) throw new Error("Connection closed");
       bodyRead += read;
     }
+
     const payload = JSON.parse(new TextDecoder().decode(data));
+
     const handle = this.#commandQueue.get(payload.nonce);
     if (handle) {
       if (payload.evt === "ERROR") {
@@ -186,6 +190,7 @@ export class DiscordIPC {
       );
       this.#readyHandle = undefined;
     }
+
     this.#emit({ type: "packet", op, data: payload });
   }
 

@@ -69,6 +69,12 @@ export class Client {
   #breakEventLoop?: boolean;
   #_eventLoop?: Promise<void>;
 
+  get userTag() {
+    return this.user === undefined
+      ? undefined
+      : `${this.user.username}#${this.user.discriminator}`;
+  }
+
   get authenticated() {
     return this.#authenticated;
   }
