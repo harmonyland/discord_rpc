@@ -10,6 +10,7 @@ const client = new Client({
 });
 
 await client.connect();
+console.log(`Connected! User: ${client.userTag}`);
 
 await client.setActivity({
   details: "Deno 🦕",
