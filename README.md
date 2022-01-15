@@ -4,12 +4,12 @@ Discord RPC module for Deno.
 
 ## Usage
 
-You can import the module from https://deno.land/x/discord_rpc/mod.ts (don't forget
-to add a version!). You can also check the documentaton 
+You can import the module from https://deno.land/x/discord_rpc/mod.ts (don't
+forget to add a version!). You can also check the documentaton 
 [here](https://doc.deno.land/https://deno.land/x/discord_rpc/mod.ts).
 
-Note that this module requires `--unstable` flag on Windows since Named Pipes support
-is added using FFI API, which is unstable.
+Note that this module requires `--unstable` flag on Windows since Named Pipes
+support is added using FFI API, which is unstable.
 
 ## Example
 
