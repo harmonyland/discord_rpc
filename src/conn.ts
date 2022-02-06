@@ -108,7 +108,7 @@ export class DiscordIPC {
         args,
         nonce,
         evt,
-      });
+      }).catch(reject);
     });
   }
 
@@ -120,7 +120,9 @@ export class DiscordIPC {
   login(clientID: string) {
     return new Promise<ReadyEventPayload>((resolve, reject) => {
       this.#readyHandle = { resolve, reject };
-      this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID });
+      this.send(OpCode.HANDSHAKE, { v: "1", client_id: clientID }).catch(
+        reject,
+      );
     });
   }
 
