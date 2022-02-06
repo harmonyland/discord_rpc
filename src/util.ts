@@ -38,6 +38,10 @@ export async function findIPC(id = 0): Promise<Deno.Conn> {
       });
     }
   } catch (_) {
-    return findIPC(id + 1);
+    if (id < 10) {
+      return findIPC(id + 1);
+    } else {
+      throw new Error("Could not connect");
+    }
   }
 }
