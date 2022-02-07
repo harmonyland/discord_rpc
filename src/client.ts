@@ -91,7 +91,7 @@ export class Client {
   /**
    * Set Presence Activity
    */
-  setActivity(activity: Activity) {
+  setActivity(activity?: Activity) {
     return this.ipc!.sendCommand<
       Activity & { application_id: string; type: number }
     >(
@@ -101,6 +101,14 @@ export class Client {
         activity,
       },
     );
+  }
+
+  /**
+   * Clears the currently set activity, if any.
+   * This will hide the "Playing X" message displayed below the user's name.
+   */
+  clearActivity() {
+    return this.setActivity();
   }
 
   /**
