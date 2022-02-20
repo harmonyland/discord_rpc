@@ -14,8 +14,8 @@ export interface Activity {
     size?: number;
   };
   timestamps?: {
-    start: number;
-    end: number;
+    start?: number;
+    end?: number;
   };
   secrets?: {
     match?: string;
