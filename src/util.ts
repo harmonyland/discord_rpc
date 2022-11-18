@@ -20,7 +20,7 @@ export function getIPCPath(id: number) {
     prefix = `\\\\.\\pipe\\`;
   } else {
     prefix = (Deno.env.get("XDG_RUNTIME_DIR") ?? Deno.env.get("TMPDIR") ??
-      Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? "/tmp") + "/";
+      Deno.env.get("TMP") ?? Deno.env.get("TEMP") ?? "/tmp").replace(/\/$/, "") + "/";
   }
 
   return `${prefix}${suffix}`;
