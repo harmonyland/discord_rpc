@@ -84,7 +84,9 @@ export class Client {
   async connect() {
     this.ipc = await DiscordIPC.connect();
     this.#startEventLoop();
-    await this.ipc.login(this.options.id);
+    const payload = await this.ipc.login(this.options.id);
+    this.user = payload.user;
+    this.config = payload.config;
     return this;
   }
 
@@ -144,7 +146,7 @@ export class Client {
     form.set("grant_type", "authorization_code");
     form.set("code", code);
 
-    const res = await fetch("https://discord.com/api/v9/oauth2/token", {
+    const res = await fetch("https://discord.com/api/v10/oauth2/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

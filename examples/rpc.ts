@@ -7,7 +7,10 @@ const client = new Client({
 await client.connect();
 console.log(`Connected! User: ${client.userTag}`);
 
-await client.setActivity({
-  details: "Deno 🦕",
-  state: "Testing...",
-});
+console.log(
+  "Activity set:",
+  await client.setActivity({
+    details: "Deno 🦕",
+    state: "Testing...",
+  }),
+);

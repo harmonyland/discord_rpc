@@ -44,4 +44,4 @@ MIT licensed. Check [LICENSE](./LICENSE) for more info.
 
 Copyright 2021 © littledivy
 
-Copyright 2022 © Harmony Land
+Copyright 2022-2023 © Harmony Land
