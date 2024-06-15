@@ -72,7 +72,7 @@ export class Client {
   get userTag() {
     return this.user === undefined
       ? undefined
-      : `${this.user.username}#${this.user.discriminator}`;
+      : `${this.user.username}${this.user.discriminator === "0" ? "" : `#${this.user.discriminator}`}`;
   }
 
   get authenticated() {

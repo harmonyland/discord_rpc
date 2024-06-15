@@ -11,7 +11,11 @@ export function encode(op: number, payloadString: string) {
 }
 
 export function getIPCPath(id: number) {
-  if (id < 0 || id > 9) throw new RangeError(`IPC ID must be between 0-9`);
+  if (id < 0 || id > 9) {
+    throw new RangeError(
+      `Tried all possible IPC paths 0-9, make sure Discord is open. It must be installed locally, not just open on a web browser.`,
+    );
+  }
 
   const suffix = `discord-ipc-${id}`;
   let prefix;
@@ -28,16 +32,19 @@ export function getIPCPath(id: number) {
 
 export async function findIPC(id = 0): Promise<Deno.Conn> {
   const path = getIPCPath(id);
+
   try {
-    if (Deno.build.os === "windows") {
-      return await connect(path);
-    } else {
-      return await Deno.connect({
-        path,
-        transport: "unix",
-      });
-    }
-  } catch (_) {
-    return findIPC(id + 1);
+    await Deno.stat(path);
+  } catch {
+    return await findIPC(id + 1);
+  }
+
+  if (Deno.build.os === "windows") {
+    return await connect(path) as unknown as Deno.Conn;
+  } else {
+    return await Deno.connect({
+      path,
+      transport: "unix",
+    });
   }
 }

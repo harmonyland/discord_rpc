@@ -18,7 +18,7 @@ const client = new Client({
           "MESSAGE_CREATE in",
           channel,
           "by",
-          msg.author.username + "#" + msg.author.discriminator + ":",
+          msg.author.username + ":",
           msg.content,
         );
       }
