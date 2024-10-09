@@ -1,6 +1,7 @@
 // deno-lint-ignore-file camelcase
 
 export interface Activity {
+  type?: ActivityType;
   details?: string;
   state?: string;
   assets?: {
@@ -26,6 +27,15 @@ export interface Activity {
     label?: string;
     url?: string;
   }[];
+}
+
+export enum ActivityType {
+  PLAYING,
+  STREAMING,
+  LISTENING,
+  WATCHING,
+  CUSTOM,
+  COMPETING,
 }
 
 export enum OpCode {

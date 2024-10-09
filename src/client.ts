@@ -1,6 +1,7 @@
 import { DiscordIPC, PacketIPCEvent } from "./conn.ts";
 import type {
   Activity,
+  ActivityType,
   ApplicationPayload,
   AuthenticateResponsePayload,
   ChannelPayload,
@@ -72,7 +73,9 @@ export class Client {
   get userTag() {
     return this.user === undefined
       ? undefined
-      : `${this.user.username}${this.user.discriminator === "0" ? "" : `#${this.user.discriminator}`}`;
+      : `${this.user.username}${
+        this.user.discriminator === "0" ? "" : `#${this.user.discriminator}`
+      }`;
   }
 
   get authenticated() {
@@ -95,7 +98,7 @@ export class Client {
    */
   setActivity(activity?: Activity) {
     return this.ipc!.sendCommand<
-      Activity & { application_id: string; type: number }
+      Activity & { application_id: string; type: ActivityType }
     >(
       "SET_ACTIVITY",
       {
